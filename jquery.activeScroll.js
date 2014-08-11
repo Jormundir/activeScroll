@@ -1,23 +1,55 @@
 (function( $ ) {
   $.fn.activeScroll = function(options) {
     var settings = $.extend({
+      animation: 200,
       class: "active",
       nav: "nav",
-      navEl: "li",
+      navItem: "li",
+      navLink: "a",
       sections: "section",
-      threshold: 0,
+      threshold: -10,
     }, options);
 
-    $scroll = $(this);
-    $sections = $scroll.find(settings.sections);
+    var $sections = $(this).find(settings.sections);
+    var navItemSelector = settings.nav + " " + settings.navItem;
+    var navLinkSelector = navItemSelector + " " + settings.navLink;
+    var statePushed = false;
 
+    // Init navagation links to animated scroll to sections
+    $sections.each(function(i) {
+      var $section = $sections.eq(i);
+      var $link = $(navLinkSelector).eq(i);
+      if ($link) {
+        $link.click(function(e) {
+          var href = $(this).attr("href");
+          var isHash = href && href[0] === "#";
+          var isVoid = href && href === "javascript:void(0)";
+          if (isHash || isVoid) {
+            event.preventDefault();
+
+            if (isHash && window.history.pushState) {
+              var newHash = window.location.hash.replace(window.location.hash, href);
+              statePushed ?
+                window.history.replaceState({}, "", newHash) :
+                window.history.pushState({}, "", newHash);
+              statePushed = true;
+            }
+
+            $("html, body").animate({
+              scrollTop: $section.position().top + (settings.threshold + 1),
+            });
+          }
+        });
+      }
+    });
+
+    // Change navagation item classes when scrolling into new section
     $(window).scroll(function() {
       var windScroll = $(window).scrollTop();
-      $sections.each(function(section) {
+      $sections.each(function(i) {
         if ($(this).position().top <= windScroll - settings.threshold) {
-          var navElSelector = settings.nav + " " + settings.navEl;
-          $(navElSelector + "." + settings.class).removeClass(settings.class);
-          $(navElSelector).eq(section).addClass(settings.class);
+          $(navItemSelector + "." + settings.class).removeClass(settings.class);
+          $(navLinkSelector).eq(i).closest(navItemSelector).addClass(settings.class);
         }
       });
     }).scroll();
