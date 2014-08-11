@@ -7,49 +7,55 @@
       navItem: "li",
       navLink: "a",
       sections: "section",
-      threshold: -10,
+      sectionIdAttr: "id",
+      threshold: -10
     }, options);
 
-    var $sections = $(this).find(settings.sections);
     var navItemSelector = settings.nav + " " + settings.navItem;
     var navLinkSelector = navItemSelector + " " + settings.navLink;
     var statePushed = false;
 
-    // Init navagation links to animated scroll to sections
-    $sections.each(function(i) {
-      var $section = $sections.eq(i);
-      var $link = $(navLinkSelector).eq(i);
-      if ($link) {
-        $link.click(function(e) {
-          var href = $(this).attr("href");
-          var isHash = href && href[0] === "#";
-          var isVoid = href && href === "javascript:void(0)";
-          if (isHash || isVoid) {
-            event.preventDefault();
+    // Init navigation links so they animatedly scroll to sections
+    var $sections = $(this).find(settings.sections).filter(function() {
+      var $section = $(this);
+      var id = $section.attr(settings.sectionIdAttr);
 
-            if (isHash && window.history.pushState) {
-              var newHash = window.location.hash.replace(window.location.hash, href);
-              statePushed ?
-                window.history.replaceState({}, "", newHash) :
-                window.history.pushState({}, "", newHash);
-              statePushed = true;
-            }
+      if (!id)
+        return false;
 
-            $("html, body").animate({
-              scrollTop: $section.position().top + (settings.threshold + 1),
-            });
-          }
+      var idStr = "#" + id;
+      var $link = $(navLinkSelector + "[href='" + idStr + "']");
+
+      if (!$link)
+        return false;
+
+      $link.click(function(e) {
+        e.preventDefault();
+
+        if (window.history.pushState) {
+          var newLoc = window.location.hash.replace(window.location.hash, idStr);
+          statePushed ?
+            window.history.replaceState({}, "", newLoc) :
+            window.history.pushState({}, "", newLoc);
+          statePushed = true;
+        }
+
+        $("html, body").animate({
+          scrollTop: $section.position().top + (settings.threshold + 1)
         });
-      }
+      });
+
+      $(this).prop("$link", $link);
+      return true;
     });
 
-    // Change navagation item classes when scrolling into new section
+    // Change navigation item classes when scrolling into new section
     $(window).scroll(function() {
       var windScroll = $(window).scrollTop();
-      $sections.each(function(i) {
+      $sections.each(function() {
         if ($(this).position().top <= windScroll - settings.threshold) {
           $(navItemSelector + "." + settings.class).removeClass(settings.class);
-          $(navLinkSelector).eq(i).closest(navItemSelector).addClass(settings.class);
+          $(this).prop("$link").closest(navItemSelector).addClass(settings.class);
         }
       });
     }).scroll();
