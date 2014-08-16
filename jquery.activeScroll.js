@@ -65,7 +65,7 @@
         }
 
         $("html, body").animate({
-          scrollTop: $section.position().top + (settings.threshold + 1)
+          scrollTop: $section.offset().top + (settings.threshold + 1)
         });
       });
 
@@ -77,7 +77,7 @@
     $(window).scroll(function() {
       var windScroll = $(window).scrollTop();
       $sections.each(function() {
-        if ($(this).position().top <= windScroll - settings.threshold) {
+        if ($(this).offset().top <= windScroll - settings.threshold) {
           $(navItemSelector + "." + settings.class).removeClass(settings.class);
           $(this).prop("$link").closest(navItemSelector).addClass(settings.class);
         }
